@@ -100,6 +100,9 @@ public class ExploringCompactionPolicy extends RatioBasedCompactionPolicy {
         }
 
         ++opts;
+        // 判断当前这个组合的文件是否满足条件
+        //     1.如果总大小未超过minSize，则满足条件，无视文件之间的大小比例
+        //     2.看文件之间大小比例，如果不存在某个文件大于其它文件之和*ratio，则满足条件
         if (size >= comConf.getMinCompactSize()
             && !filesInRatio(potentialMatchFiles, currentRatio)) {
           continue;

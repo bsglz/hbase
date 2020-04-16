@@ -339,6 +339,8 @@ public abstract class RegionTransitionProcedure
   protected Procedure[] execute(final MasterProcedureEnv env) throws ProcedureSuspendedException {
     final AssignmentManager am = env.getAssignmentManager();
     final RegionStateNode regionNode = getRegionState(env);
+    // am.addRegionInTransition方法中除了更新RIT相关对象外，
+    // 还会将当前procedure对象赋值给RegionStateNode的procedure变量
     if (!am.addRegionInTransition(regionNode, this)) {
       if (this.isOverride()) {
         LOG.info("{} owned by pid={}, OVERRIDDEN by 'this' (pid={}, override=true).",

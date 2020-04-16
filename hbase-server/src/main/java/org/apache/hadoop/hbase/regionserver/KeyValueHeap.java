@@ -112,6 +112,13 @@ public class KeyValueHeap extends NonReversedNonLazyKeyValueScanner
     return this.current.peek();
   }
 
+  /**
+   * 1、获取下一个cell
+   * 2、处理已读取完的scanner
+   * 3、scanner重排序
+   * @return
+   * @throws IOException
+   */
   @Override
   public Cell next()  throws IOException {
     if(this.current == null) {

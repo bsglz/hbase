@@ -684,6 +684,10 @@ public class StochasticLoadBalancer extends BaseLoadBalancer {
       int thisRegionCount = cluster.getNumRegions(thisServer);
       int otherRegionCount = cluster.getNumRegions(otherServer);
 
+      // 以下4行代码的意思是，对于region更多的那个server，必然选1个region
+      // ，而对于region更少的那个server，则只有一半概率选1个region
+      // ，如果只有1个选了，则为moveAction，如果2个都选了，则为swapAction
+
       // Assign the chance based upon the above
       double thisChance = (thisRegionCount > otherRegionCount) ? 0 : 0.5;
       double otherChance = (thisRegionCount <= otherRegionCount) ? 0 : 0.5;

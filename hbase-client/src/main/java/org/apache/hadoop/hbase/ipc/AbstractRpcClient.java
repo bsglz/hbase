@@ -417,7 +417,9 @@ public abstract class AbstractRpcClient<T extends RpcConnection> implements RpcC
         throw new ServerTooBusyException(addr, count);
       }
       cs.setConcurrentCallsPerServer(count);
+      //此处只是创建了Connection对象，初始化了一些数据，比如header相关的ByteBuf
       T connection = getConnection(remoteId);
+      //发送消息时，会进行判断，如果还未连接，则会调用connect方法
       connection.sendRequest(call, hrc);
     } catch (Exception e) {
       call.setException(toIOE(e));

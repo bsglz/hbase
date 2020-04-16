@@ -592,6 +592,7 @@ public class StoreScanner extends NonReversedNonLazyKeyValueScanner
           }
 
           this.countPerRow++;
+          // 如果存在cell数量限制，并且加上当前这个cell后已经超出limit，因此结束loop，并且丢弃该cell
           if (storeLimit > -1 && this.countPerRow > (storeLimit + storeOffset)) {
             // do what SEEK_NEXT_ROW does.
             if (!matcher.moreRowsMayExistAfter(cell)) {
@@ -605,6 +606,7 @@ public class StoreScanner extends NonReversedNonLazyKeyValueScanner
 
           // add to results only if we have skipped #storeOffset kvs
           // also update metric accordingly
+          // offset之前的需要跳过，scan对象可设置该参数(setRowOffsetPerColumnFamily)
           if (this.countPerRow > storeOffset) {
             outResult.add(cell);
 
@@ -730,6 +732,17 @@ public class StoreScanner extends NonReversedNonLazyKeyValueScanner
     return null;
   }
 
+  /**
+   * skip是用next方法从各个scanner的当前block的位置逐个往下找
+   * seek是基于索引找到block，再逐个找
+   *
+   * nextRow是基于row+空family+空qualifier+最小type构造的row的最大cell
+   * 如果该cell大于下一个block的indexKey，就意味着当前这个storeFileScanner的当前block没必要去读了
+   * 这种情况下说明这个row包含的cell比较多，重新seek让所有storeFileScanner都通过索引去定位
+   * ，可能是更好的策略
+   * @param cell
+   * @throws IOException
+   */
   private void seekOrSkipToNextRow(Cell cell) throws IOException {
     // If it is a Get Scan, then we know that we are done with this row; there are no more
     // rows beyond the current one: don't try to optimize.

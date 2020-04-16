@@ -831,7 +831,7 @@ public class HFileBlockIndex {
         // the secondary index.
         int entryRelOffset = nonRootBlock
             .getIntAfterPosition(Bytes.SIZEOF_INT * (1 + entryIndex));
-
+        // 将ByteBuff的position变量指向查找到的entry位置，后续的读取操作会从此处开始
         nonRootBlock.position(entriesOffset + entryRelOffset);
       }
 

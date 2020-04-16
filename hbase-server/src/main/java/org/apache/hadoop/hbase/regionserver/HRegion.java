@@ -3328,7 +3328,7 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver, Regi
 
       visitBatchOperations(true, nextIndexToProcess + miniBatchOp.size(), new Visitor() {
         private Pair<NonceKey, WALEdit> curWALEditForNonce;
-
+        // 同一个miniBatchOp中的mutaiton拥有同样的seqid，并会放到同一个WalEntry中
         @Override
         public boolean visit(int index) throws IOException {
           Mutation m = getMutation(index);
@@ -3359,6 +3359,7 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver, Regi
               walEdit.add(cell);
             }
           }
+          // 添加cell
           walEdit.add(familyCellMaps[index]);
 
           return true;

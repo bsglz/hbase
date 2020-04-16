@@ -781,6 +781,7 @@ public class HFileReaderImpl implements HFile.Reader, Configurable {
         if (reader.getFileContext().isIncludesTags()) {
           lastKeyValueSize += tlen + Bytes.SIZEOF_SHORT;
         }
+        //seek的过程，对于block来说，可以理解为推进其内部ByteBuffer的position的过程
         blockBuffer.skip(lastKeyValueSize);
       } while (blockBuffer.hasRemaining());
 

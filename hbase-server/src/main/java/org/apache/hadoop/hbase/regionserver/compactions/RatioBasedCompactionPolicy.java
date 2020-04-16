@@ -169,6 +169,7 @@ public class RatioBasedCompactionPolicy extends SortedCompactionPolicy {
       LOG.info("Running an off-peak compaction, selection ratio = " + ratio);
     }
 
+    // candidates中的文件顺序为old->new
     // get store file sizes for incremental compacting selection.
     final int countOfFiles = candidates.size();
     long[] fileSizes = new long[countOfFiles];
@@ -183,7 +184,12 @@ public class RatioBasedCompactionPolicy extends SortedCompactionPolicy {
         - ((tooFar < countOfFiles) ? fileSizes[tooFar] : 0);
     }
 
-
+    // 这里判断的逻辑是，从最老的文件开始，检查是否要将其排除掉
+    // 前面这部分用来避免所选文件数量过少
+    //     1.如果剩余候选文件小于minFiles，则都包含进来
+    // 后面这部分用来避免所选文件过大
+    //     1.如果不大于minSize，则不可以排除，即要包含进来
+    //     2.如果不大于比它更新的文件大小之和*ratio，则不可以排除，即要包含进来
     while (countOfFiles - start >= comConf.getMinFilesToCompact() &&
       fileSizes[start] > Math.max(comConf.getMinCompactSize(),
           (long) (sumSize[start + 1] * ratio))) {

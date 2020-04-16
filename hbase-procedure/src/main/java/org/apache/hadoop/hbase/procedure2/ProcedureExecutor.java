@@ -1085,6 +1085,7 @@ public class ProcedureExecutor<TEnvironment> {
 
     // Initialize the procedure
     proc.setNonceKey(nonceKey);
+    // 此方法中会将state改为RUNNABLE
     proc.setProcId(currentProcId.longValue());
 
     // Commit the transaction
@@ -1414,7 +1415,7 @@ public class ProcedureExecutor<TEnvironment> {
     do {
       // Try to acquire the execution
       if (!procStack.acquire(proc)) {
-        if (procStack.setRollback()) {
+        if (procStack.setRollback()) {// 当前不存在处于running状态的proc，回滚全部porc
           // we have the 'rollback-lock' we can start rollingback
           switch (executeRollback(rootProcId, procStack)) {
             case LOCK_ACQUIRED:
@@ -1430,7 +1431,7 @@ public class ProcedureExecutor<TEnvironment> {
             default:
               throw new UnsupportedOperationException();
           }
-        } else {
+        } else {//当前存在其它处于running状态的proc，因此只能回滚当前porc
           // if we can't rollback means that some child is still running.
           // the rollback will be executed after all the children are done.
           // If the procedure was never executed, remove and mark it as rolledback.
@@ -1770,6 +1771,7 @@ public class ProcedureExecutor<TEnvironment> {
       }
 
       // Add the procedure to the stack
+      // 如果porc的state为FAILED，则此方法中也会将procStack的state置为FAILED
       procStack.addRollbackStep(procedure);
 
       // allows to kill the executor before something is stored to the wal.
