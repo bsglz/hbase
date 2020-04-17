@@ -275,6 +275,18 @@ class SequenceIdAccounting {
     return startCacheFlush(encodedRegionName,familytoSeq);
   }
 
+  /**
+   * 这个方法里主要是把lowestUnflushedSequenceIds中本次要刷新的store的oldestSeqId
+   * 挪到flushingSequenceIds中去，挪完后如果该region对应的map已经没数据了则删除；
+   * 后续对该region继续有写入操作时，会自动创建该region的map；
+   * 如果后续不再有写入，比如region被move到其它rs上的情况，则相当于清理了垃圾数据，避免内存泄漏；
+   *
+   * 返回的lowestUnflushedInRegion实际上是本次未被选中的那些store中的oldestSeqId；
+   *
+   * @param encodedRegionName
+   * @param familyToSeq
+   * @return
+   */
   Long startCacheFlush(final byte[] encodedRegionName, final Map<byte[], Long> familyToSeq) {
     Map<ImmutableByteArray, Long> oldSequenceIds = null;
     Long lowestUnflushedInRegion = HConstants.NO_SEQNUM;

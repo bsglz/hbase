@@ -2518,6 +2518,7 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver, Regi
     status.setStatus("Preparing flush snapshotting stores in " + getRegionInfo().getEncodedName());
     MemStoreSizing totalSizeOfFlushableStores = new NonThreadSafeMemStoreSizing();
 
+    // 使用DefaultMemStore的情况下，值固定为NO_SEQNUM(即-1)
     Map<byte[], Long> flushedFamilyNamesToSeq = new HashMap<>();
     for (HStore store : storesToFlush) {
       flushedFamilyNamesToSeq.put(store.getColumnFamilyDescriptor().getName(),
@@ -2530,9 +2531,12 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver, Regi
     // The sequence id of this flush operation which is used to log FlushMarker and pass to
     // createFlushContext to use as the store file's sequence id. It can be in advance of edits
     // still in the memstore, edits that are in other column families yet to be flushed.
+    // 新生成一个seqId，代表了当前reigon的最大seqId，会保存在生成的hfile中
+    // 用来在重新打开reigon时，还原mvcc中write point的值
     long flushOpSeqId = HConstants.NO_SEQNUM;
     // The max flushed sequence id after this flush operation completes. All edits in memstore
     // will be in advance of this sequence id.
+    // 已刷新的最大seqId，在重新打开reigon时，由该值可知需要重放wal中的哪些entry
     long flushedSeqId = HConstants.NO_SEQNUM;
     byte[] encodedRegionName = getRegionInfo().getEncodedNameAsBytes();
     try {
@@ -2549,6 +2553,7 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver, Regi
         }
         flushOpSeqId = getNextSequenceId(wal);
         // Back up 1, minus 1 from oldest sequence id in memstore to get last 'flushed' edit
+        // 在刷新全部store的情况下，最新的seqId跟未刷新的oldestSeqId是相等的
         flushedSeqId =
             earliestUnflushedSequenceIdForTheRegion.longValue() == HConstants.NO_SEQNUM?
                 flushOpSeqId: earliestUnflushedSequenceIdForTheRegion.longValue() - 1;

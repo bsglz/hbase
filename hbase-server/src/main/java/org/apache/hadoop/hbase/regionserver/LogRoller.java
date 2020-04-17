@@ -159,10 +159,14 @@ public class LogRoller extends HasThread implements Closeable {
         LOG.debug("Wal roll period {} ms elapsed", this.rollPeriod);
       } else {
         synchronized (this) {
+          // anyMatch的参数正常来说需要一个条件，比如str -> str.equals("a")这样
+          // 但由于walNeedsRoll的value存的已经是boolean值，因此直接取它作为结果即可
           if (walNeedsRoll.values().stream().anyMatch(Boolean::booleanValue)) {
             // WAL roll requested, fall through
             LOG.debug("WAL roll requested");
           } else {
+            // 如果既没有到1个小时，又没有主动丢过来需要roll的文件
+            // 则进入wait，等10秒钟进入下个循环，
             try {
               wait(this.threadWakeFrequency);
             } catch (InterruptedException e) {

@@ -74,6 +74,9 @@ public class FlushAllLargeStoresPolicy extends FlushLargeStoresPolicy {
 
   @Override
   protected boolean shouldFlush(HStore store) {
+    // 前面的条件关于大小是否超过阈值，后面的条件关于是否足够old
+    // 大小阈值：v=128M/列族数量(如果小于16M，则取16M)
+    // 足够old：大于1小时未刷新，或者seqId已落后mvcc.readpoint超过3000w
     return super.shouldFlush(store) || region.shouldFlushStore(store);
   }
 
